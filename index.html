@@ -24,6 +24,7 @@
             resources = PIXI.loader.resources,
             Sprite = PIXI.Sprite,
             TextStyle = PIXI.TextStyle;
+        Texture = PIXI.Texture;
 
         //create pixi Application
         let app = new Application({
@@ -40,36 +41,67 @@
 
         loader
             .add("sprites/wizard/good-wizard-idle-right.png")
+            .add("sprites/stones/earth-gem.png")
+            .add("sprites/stones/fire-gem.png")
+            .add("sprites/stones/water-gem.png")
             .load(setup);
 
         let bump = new Bump(PIXI);
+
         let wizard;
+        let fireWizard;
+        let waterWizard;
+        let earthWizard;
+
         let wizardEvil;
+
         let state;
+        let earthGem;
+        let fireGem;
+        let waterGem;
         const speed = 5;
 
 
         function setup() {
 
             wizard = new Sprite(resources["sprites/wizard/good-wizard-idle-right.png"].texture);
+            fireWizard = Texture.fromImage('sprites/wizard/good-wizard-fire-right.png');
+            waterWizard = Texture.fromImage('sprites/wizard/good-wizard-water-right.png');
+            earthWizard = Texture.fromImage('sprites/wizard/good-wizard-earth-right.png');
+
             wizardEvil = new Sprite(resources["sprites/wizard/good-wizard-idle-right.png"].texture);
+            earthGem = new Sprite(resources["sprites/stones/earth-gem.png"].texture);
+            fireGem = new Sprite(resources["sprites/stones/fire-gem.png"].texture);
+            waterGem = new Sprite(resources["sprites/stones/water-gem.png"].texture);
+
+
+
             let wizardY = wizard.height / 2;
-            let wizardX = wizard.width / 2
+            let wizardX = wizard.width / 2;
 
             wizard.vx = 0;
             wizard.vy = 0;
 
-            wizard.pivot.set(wizardX, wizardY);
+            wizard.anchor.set(0.5);
             wizard.position.set(wizardX, app.view.height / 2);
 
-            wizardEvil.pivot.set(wizardX, wizardY);
+            wizardEvil.anchor.set(0.5);
             wizardEvil.position.set(wizardX, app.view.height / 2 + wizardY + 50);
 
+            earthGem.anchor.set(0.5);
+            earthGem.position.set(app.view.width / 2, app.view.height / 2);
+
+            fireGem.anchor.set(0.5);
+            fireGem.position.set(app.view.width / 2, app.view.height / 2 + fireGem.height);
+
+            waterGem.anchor.set(0.5);
+            waterGem.position.set(app.view.width / 2, app.view.height / 2 + waterGem.height * -1);
 
             app.stage.addChild(wizard);
             app.stage.addChild(wizardEvil);
-
-
+            app.stage.addChild(earthGem);
+            app.stage.addChild(fireGem);
+            app.stage.addChild(waterGem);
 
             //Capture the keyboard arrow keys
             left = keyboard(37),
@@ -137,62 +169,42 @@
             state(delta);
         }
 
+        function removeSpriteAndGenerateInRandomPlace(mySprite) {
+            app.stage.removeChild(mySprite);
+            mySprite.position.set(getRandomInt(50, 700), getRandomInt(50, 700));
+            app.stage.addChild(mySprite);
+        }
+
+        function getRandomInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min)) + min;
+        }
+
+
         function play(delta) {
             wizard.x += wizard.vx;
             wizard.y += wizard.vy;
 
+            console.log(wizard.position);
             //check for collision
             if (bump.hit(wizard, wizardEvil)) {
-                console.log('hit');
+                //nada
             } else {
-                console.log('no collision');
+                //nada
             }
 
-            // wizard.x += wizard.vx + delta;
-            // wizard.y += wizard.vy + delta;
-
-            //wizardEvil.x += 1;
+            if (bump.hit(wizard, fireGem)) {
+                wizard.texture = fireWizard;
+                removeSpriteAndGenerateInRandomPlace(fireGem);
+            } else if (bump.hit(wizard, waterGem)) {
+                wizard.texture = waterWizard;
+                removeSpriteAndGenerateInRandomPlace(waterGem);
+            } else if (bump.hit(wizard, earthGem)) {
+                wizard.texture = earthWizard;
+                removeSpriteAndGenerateInRandomPlace(earthGem);
+            }
         }
-
-        //The `hitTestRectangle` function
-        function hitTestRectangle(r1, r2) {
-            //Define the variables we'll need to calculate
-            let hit, combinedHalfWidths, combinedHalfHeights, vx, vy;
-            //hit will determine whether there's a collision
-            hit = false;
-            //Find the center points of each sprite
-            r1.centerX = r1.x + r1.width / 2;
-            r1.centerY = r1.y + r1.height / 2;
-            r2.centerX = r2.x + r2.width / 2;
-            r2.centerY = r2.y + r2.height / 2;
-            //Find the half-widths and half-heights of each sprite
-            r1.halfWidth = r1.width / 2;
-            r1.halfHeight = r1.height / 2;
-            r2.halfWidth = r2.width / 2;
-            r2.halfHeight = r2.height / 2;
-            //Calculate the distance vector between the sprites
-            vx = r1.centerX - r2.centerX;
-            vy = r1.centerY - r2.centerY;
-            //Figure out the combined half-widths and half-heights
-            combinedHalfWidths = r1.halfWidth + r2.halfWidth;
-            combinedHalfHeights = r1.halfHeight + r2.halfHeight;
-            //Check for a collision on the x axis
-            if (Math.abs(vx) < combinedHalfWidths) {
-                //A collision might be occuring. Check for a collision on the y axis
-                if (Math.abs(vy) < combinedHalfHeights) {
-                    //There's definitely a collision happening
-                    hit = true;
-                } else {
-                    //There's no collision on the y axis
-                    hit = false;
-                }
-            } else {
-                //There's no collision on the x axis
-                hit = false;
-            }
-            //`hit` will be either `true` or `false`
-            return hit;
-        };
 
         //The `keyboard` helper function
         function keyboard(keyCode) {
