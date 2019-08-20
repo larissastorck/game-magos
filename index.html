@@ -1,0 +1,239 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Hello World</title>
+    <script src="/library/bump/bin/bump.js"></script>
+    <style>
+        * {
+            padding-top: 5px;
+            padding-left: 100px;
+            margin: auto;
+        }
+    </style>
+</head>
+<script src="pixi/pixi.min.js"></script>
+
+<body>
+    <script type="text/javascript">
+
+        //Aliases
+        let Application = PIXI.Application,
+            loader = PIXI.loader,
+            resources = PIXI.loader.resources,
+            Sprite = PIXI.Sprite,
+            TextStyle = PIXI.TextStyle;
+
+        //create pixi Application
+        let app = new Application({
+            width: 800,         // default: 800
+            height: 600,        // default: 600
+            antialias: true,    // default: false
+            transparent: false, // default: false
+            resolution: 1       // default: 1
+        });
+
+        app.renderer.backgroundColor = 0x061639;
+        document.body.appendChild(app.view);
+
+
+        loader
+            .add("sprites/wizard/good-wizard-idle-right.png")
+            .load(setup);
+
+        let bump = new Bump(PIXI);
+        let wizard;
+        let wizardEvil;
+        let state;
+        const speed = 5;
+
+
+        function setup() {
+
+            wizard = new Sprite(resources["sprites/wizard/good-wizard-idle-right.png"].texture);
+            wizardEvil = new Sprite(resources["sprites/wizard/good-wizard-idle-right.png"].texture);
+            let wizardY = wizard.height / 2;
+            let wizardX = wizard.width / 2
+
+            wizard.vx = 0;
+            wizard.vy = 0;
+
+            wizard.pivot.set(wizardX, wizardY);
+            wizard.position.set(wizardX, app.view.height / 2);
+
+            wizardEvil.pivot.set(wizardX, wizardY);
+            wizardEvil.position.set(wizardX, app.view.height / 2 + wizardY + 50);
+
+
+            app.stage.addChild(wizard);
+            app.stage.addChild(wizardEvil);
+
+
+
+            //Capture the keyboard arrow keys
+            left = keyboard(37),
+                up = keyboard(38),
+                right = keyboard(39),
+                down = keyboard(40);
+
+            left.press = () => {
+                //Change the wizard's velocity when the key is pressed
+                wizard.vx = -speed;
+                wizard.vy = 0;
+            };
+
+            //Left arrow key `release` method
+            left.release = () => {
+                //If the left arrow has been released, and the right arrow isn't down,
+                //and the wizard isn't moving vertically:
+                //Stop the wizard
+                if (!right.isDown && wizard.vy === 0) {
+                    wizard.vx = 0;
+                }
+            };
+
+            //Up
+            up.press = () => {
+                wizard.vy = -speed;
+                wizard.vx = 0;
+            };
+            up.release = () => {
+                if (!down.isDown && wizard.vx === 0) {
+                    wizard.vy = 0;
+                }
+            };
+
+            //Right
+            right.press = () => {
+                wizard.vx = speed;
+                wizard.vy = 0;
+            };
+            right.release = () => {
+                if (!left.isDown && wizard.vy === 0) {
+                    wizard.vx = 0;
+                }
+            };
+
+            //Down
+            down.press = () => {
+                wizard.vy = speed;
+                wizard.vx = 0;
+            };
+            down.release = () => {
+                if (!up.isDown && wizard.vx === 0) {
+                    wizard.vy = 0;
+                }
+            };
+
+            //set the game state
+            state = play;
+
+            //start the game loop
+            app.ticker.add(delta => gameLoop(delta));
+        }
+
+        function gameLoop(delta) {
+            state(delta);
+        }
+
+        function play(delta) {
+            wizard.x += wizard.vx;
+            wizard.y += wizard.vy;
+
+            //check for collision
+            if (bump.hit(wizard, wizardEvil)) {
+                console.log('hit');
+            } else {
+                console.log('no collision');
+            }
+
+            // wizard.x += wizard.vx + delta;
+            // wizard.y += wizard.vy + delta;
+
+            //wizardEvil.x += 1;
+        }
+
+        //The `hitTestRectangle` function
+        function hitTestRectangle(r1, r2) {
+            //Define the variables we'll need to calculate
+            let hit, combinedHalfWidths, combinedHalfHeights, vx, vy;
+            //hit will determine whether there's a collision
+            hit = false;
+            //Find the center points of each sprite
+            r1.centerX = r1.x + r1.width / 2;
+            r1.centerY = r1.y + r1.height / 2;
+            r2.centerX = r2.x + r2.width / 2;
+            r2.centerY = r2.y + r2.height / 2;
+            //Find the half-widths and half-heights of each sprite
+            r1.halfWidth = r1.width / 2;
+            r1.halfHeight = r1.height / 2;
+            r2.halfWidth = r2.width / 2;
+            r2.halfHeight = r2.height / 2;
+            //Calculate the distance vector between the sprites
+            vx = r1.centerX - r2.centerX;
+            vy = r1.centerY - r2.centerY;
+            //Figure out the combined half-widths and half-heights
+            combinedHalfWidths = r1.halfWidth + r2.halfWidth;
+            combinedHalfHeights = r1.halfHeight + r2.halfHeight;
+            //Check for a collision on the x axis
+            if (Math.abs(vx) < combinedHalfWidths) {
+                //A collision might be occuring. Check for a collision on the y axis
+                if (Math.abs(vy) < combinedHalfHeights) {
+                    //There's definitely a collision happening
+                    hit = true;
+                } else {
+                    //There's no collision on the y axis
+                    hit = false;
+                }
+            } else {
+                //There's no collision on the x axis
+                hit = false;
+            }
+            //`hit` will be either `true` or `false`
+            return hit;
+        };
+
+        //The `keyboard` helper function
+        function keyboard(keyCode) {
+            var key = {};
+            key.code = keyCode;
+            key.isDown = false;
+            key.isUp = true;
+            key.press = undefined;
+            key.release = undefined;
+            //The `downHandler`
+            key.downHandler = event => {
+                console.log('event ', event);
+                if (event.keyCode === key.code) {
+                    if (key.isUp && key.press) key.press();
+                    key.isDown = true;
+                    key.isUp = false;
+                }
+                event.preventDefault();
+            };
+            //The `upHandler`
+            key.upHandler = event => {
+                if (event.keyCode === key.code) {
+                    if (key.isDown && key.release) key.release();
+                    key.isDown = false;
+                    key.isUp = true;
+                }
+                event.preventDefault();
+            };
+            //Attach event listeners
+            window.addEventListener(
+                "keydown", key.downHandler.bind(key), false
+            );
+            window.addEventListener(
+                "keyup", key.upHandler.bind(key), false
+            );
+            return key;
+        }
+
+
+
+    </script>
+</body>
+
+</html>
