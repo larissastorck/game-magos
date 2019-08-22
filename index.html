@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <title>Hello World</title>
     <script src="/library/bump/bin/bump.js"></script>
+    <script src="/scripts/keyboard.js"></script>
     <style>
         * {
             padding-top: 5px;
@@ -41,6 +42,7 @@
 
         loader
             .add("sprites/wizard/good-wizard-idle-right.png")
+            .add("sprites/wizard/evil-wizard-idle-right.png")
             .add("sprites/stones/earth-gem.png")
             .add("sprites/stones/fire-gem.png")
             .add("sprites/stones/water-gem.png")
@@ -69,7 +71,7 @@
             waterWizard = Texture.fromImage('sprites/wizard/good-wizard-water-right.png');
             earthWizard = Texture.fromImage('sprites/wizard/good-wizard-earth-right.png');
 
-            wizardEvil = new Sprite(resources["sprites/wizard/good-wizard-idle-right.png"].texture);
+            wizardEvil = new Sprite(resources["sprites/wizard/evil-wizard-idle-right.png"].texture);
             earthGem = new Sprite(resources["sprites/stones/earth-gem.png"].texture);
             fireGem = new Sprite(resources["sprites/stones/fire-gem.png"].texture);
             waterGem = new Sprite(resources["sprites/stones/water-gem.png"].texture);
@@ -205,45 +207,6 @@
                 removeSpriteAndGenerateInRandomPlace(earthGem);
             }
         }
-
-        //The `keyboard` helper function
-        function keyboard(keyCode) {
-            var key = {};
-            key.code = keyCode;
-            key.isDown = false;
-            key.isUp = true;
-            key.press = undefined;
-            key.release = undefined;
-            //The `downHandler`
-            key.downHandler = event => {
-                console.log('event ', event);
-                if (event.keyCode === key.code) {
-                    if (key.isUp && key.press) key.press();
-                    key.isDown = true;
-                    key.isUp = false;
-                }
-                event.preventDefault();
-            };
-            //The `upHandler`
-            key.upHandler = event => {
-                if (event.keyCode === key.code) {
-                    if (key.isDown && key.release) key.release();
-                    key.isDown = false;
-                    key.isUp = true;
-                }
-                event.preventDefault();
-            };
-            //Attach event listeners
-            window.addEventListener(
-                "keydown", key.downHandler.bind(key), false
-            );
-            window.addEventListener(
-                "keyup", key.upHandler.bind(key), false
-            );
-            return key;
-        }
-
-
 
     </script>
 </body>
