@@ -6,6 +6,7 @@
     <title>Hello World</title>
     <script src="/library/bump/bin/bump.js"></script>
     <script src="/scripts/keyboard.js"></script>
+    <script src="/scripts/stage-boundaries.js"></script>
     <style>
         * {
             padding-top: 5px;
@@ -27,10 +28,13 @@
             TextStyle = PIXI.TextStyle;
         Texture = PIXI.Texture;
 
+        const WIDTH = 800;
+        const HEIGHT = 600;
+
         //create pixi Application
         let app = new Application({
-            width: 800,         // default: 800
-            height: 600,        // default: 600
+            width: WIDTH,         // default: 800
+            height: HEIGHT,        // default: 600
             antialias: true,    // default: false
             transparent: false, // default: false
             resolution: 1       // default: 1
@@ -188,7 +192,12 @@
             wizard.x += wizard.vx;
             wizard.y += wizard.vy;
 
-            console.log(wizard.position);
+            console.log("wizard.x ", wizard.x);
+            console.log("container.x ", app.stage.x);
+            //contain(wizard,  {x: wizard.width/2, y: wizard.height/2, width: WIDTH, height: HEIGHT});
+            
+            contain(wizard,  {width: WIDTH, height: HEIGHT});
+            //contain(wizardEvil, app.stage);
             //check for collision
             if (bump.hit(wizard, wizardEvil)) {
                 //nada
