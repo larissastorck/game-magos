@@ -20,7 +20,7 @@ http-server
 ```
 
 
-## Game Shots
+## Game Images
 
 Your wizard
 
